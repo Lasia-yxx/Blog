@@ -1,0 +1,107 @@
+
+<!-- 登陆页面 -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>登录</title>
+  <!-- import element-ui css -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <link href="./CSS/index.css" type="text/css" rel="stylesheet">
+</head>
+
+<!-- import Vue and Element UI -->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<body>
+
+  <!-- 总容器 -->
+  <div id="app"> 
+    <!-- 背景图片 -->
+    <div class="backgorund_container">
+
+      <img class="backgroundPic" src="./IMG/Pic/backgroundPic.png"/>
+      <!-- 加一个半透明的黑色遮盖视图，使背景图片亮度降低 -->
+      <div class="backgorundPic_cover"></div>
+      
+    </div>
+    <!-- 登录框 -->
+    <div class="loggin_container">
+      <div class="loggin_box">
+        <div class="user_icon_container">
+          <img class='user_icon' src="./IMG/Icon/user.png" />
+        </div>
+        <!-- 账户通行证 -->
+        <input onkeyup="get_input_value()" class='passport' placeholder="请输入通行证" />
+        <div onclick="mouse_click()" onmousemove="mouse_move()" onmouseout="mouse_out()" class="loggin_button">
+          <i name='loggin_button_icon' class="el-icon-right"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
+
+<script>
+  var app = new Vue({
+    el: "#app",
+    data:{
+      passport_value:'',
+      index:null
+    }
+  })
+</script>
+<script>
+  /*获取input组件中的输入值，并将其存储到全局变量passport_value中*/
+  function get_input_value(){
+    var passport_val = document.getElementsByClassName("passport")[0].value
+    app.passport_value = passport_val 
+    console.log(app.passport_value)
+  }
+
+  /*对登录按钮设置鼠标事件，比如鼠标移入，移出和点击*/
+  function mouse_click(){
+    var passport_value = app.passport_value
+    var style = document.getElementsByName('loggin_button_icon')[0]
+
+    style.className = 'el-icon-loading'/*点击修改图标样式*/
+
+    var para = 'passport=' + passport_value
+    var url = './PHP/loggin.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          console.log(xhr.responseText)
+          app.index = Number(xhr.responseText)
+          console.log('app.index',app.index)
+        }
+      }
+    }
+    xhr.send(para)
+    //app.index用于检验通行证是否存在
+    if(app.index == 1){
+      window.location.href = 'home_page.html'
+      console.log('success')
+    }else if(app.index == 0){
+      alert("通行证不存在")
+      style.className = 'el-icon-right'
+    }
+  }
+  function mouse_move(){
+    document.getElementsByClassName('loggin_button')[0].style.backgroundColor = '#409EFF'
+    console.log('move')
+  }
+  function mouse_out(){
+    document.getElementsByClassName('loggin_button')[0].style.backgroundColor = '#aab8ff'
+    console.log('out')
+  }
+</script>
