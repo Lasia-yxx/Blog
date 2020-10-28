@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>博客内容</title>
+    <!-- import element-ui css -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link href="./CSS/readBlog.css" type="text/css" rel="stylesheet">
+    <link href="./CSS/home_pages.css" type="text/css" rel="stylesheet">
+</head>
+
+<!-- import jQuery  --> 
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+<!-- import Vue and Element UI -->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<!-- 引入看板娘 -->
+<script src="https://cdn.jsdelivr.net/gh/stevenjoezhang/live2d-widget@latest/autoload.js"></script>
+
+
+<body style="z-index: -19999;position: absolute;width: 100%;">
+<script src="./JavaScript/canvas.js"></script>
+<div style="width: 100%;" id="app">
+
+  <div id="particles-js">
+    <canvas width="1920" height="910" id="canvas" class="particles-js-canvas-el">
+  </div>
+
+
+  <div id="top_bar">
+    <div style="font-size: 22px;margin-left: 20px;max-width: 120px;" class="Name">{{read_passport}}</div>
+    <el-divider  direction="vertical"></el-divider>
+    <div style="font-size: 18px;font-weight: lighter;" class="Name_add">个人博客</div>
+    <input onblur="onBlur('search_input','search_icon_container')" onfocus="onFocus('search_input','search_icon_container')" class="search_input" placeholder="search your logs" />
+    <div id="search_icon_container" onclick="start_search('search_input')"><i name="search_icon" class="el-icon-search"></i></div>
+    <div class="top_title">{{title}}</div>
+  </div>
+
+  <div style="top:160px" class="user_info_contanier">
+    <img class="user_avatar" :src="user_info.user_avatar"/>
+    <div class="user_name">{{user_info.user_name}}</div>
+    <div class="user_motto">{{user_info.user_motto}}</div>
+    <div class="user_position">
+      <i id="location_icon" class="el-icon-location-information"></i>
+      <div class="location">{{user_info.user_location}}</div>
+    </div>
+    <div class="statistics_container">
+      <div class="blog_statistics" style="border-right: 1px solid #DCDFE6;">
+        <div class="statistics_num">{{user_info.user_blogNum}}</div>
+        <div class="statistics_name">博客</div>
+      </div>
+      <div class="diary_statistics">
+        <div class="statistics_num">{{user_info.user_dairyNum}}</div>
+        <div class="statistics_name">生活日记</div>
+      </div>
+    </div>
+    <div class="button_container">
+      <div class="github_btn">
+        <el-tooltip class="item" effect="dark" content="GitHub" placement="top">
+          <el-button type='text'><img class="btn" onclick="click_btn('github')" name='github' src="IMG\Icon\github.png" /></el-button>
+        </el-tooltip>
+      </div>
+      <div class="share_btn">
+        <el-tooltip class="item" effect="dark" content="分享" placement="top">
+          <el-button type='text'><img class="btn" onclick="click_btn('share')" name='share' src="IMG\Icon\share.png" /></el-button>
+        </el-tooltip>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:160px;width: 880px;" class="user_main_container">
+    <div id="blog_area" style="width: 100%;">
+      
+      <!-- <div class="blog">
+        <div class="title">Dubbo 迈向云原生的里程碑 | 应用级服务发现</div>
+        <div class="blog_info_container">
+          <i class="el-icon-date"></i>
+          <div class="date">2020-08-14</div>
+          <i style="margin-left: 25px;" class="el-icon-user"></i>
+          <div class="author">Lasia</div>
+          <i style="margin-left: 25px;" class="el-icon-setting"></i>
+          <div class="classify">Java</div>
+        </div>
+        <div class="preface_container">
+          <h2 style="color: #525252;">前言</h2>
+          <div class="preface">社区版本 </div>
+        </div>
+        <div style="width: 94%;color: #555555;font-weight: lighter;font-size: 17px;" class="blog_main"></div>
+        <div class="blank"></div>
+        <div class="blog_btn_container"></div>
+      </div> -->
+      
+    </div>
+    
+  </div>
+
+  <div class="function_bar">
+    <div id="read_btn" name='read_btn1' class="function_container" style="margin-top: 15px;">
+      <el-tooltip class="item" effect="dark" content="修改博客" placement="top">
+        <el-button onclick="edit_blog()" class="edit_btn" icon="el-icon-edit"></el-button>
+      </el-tooltip>
+    </div>
+    <div id="read_btn" name='read_btn2' class="function_container">
+      <el-tooltip class="item" effect="dark" content="删除博客" placement="top">
+          <el-button onclick="delete_blog()" class="edit_btn" icon="el-icon-delete"></el-button>
+      </el-tooltip>
+    </div>
+    <div class="function_container" style="margin-bottom: 15px;border: none;"><el-switch onclick="swicth_pet()" v-model="value1" active-text="看板娘" ></el-switch></div>
+  
+  </div>
+  <div class="comfirm">
+    <div class="comfirm_container">
+      <div class="confirm_title">确定要删除吗</div>
+      <p style="width: 90%;font-size: 18px;letter-spacing: 2px;color: #4d4d4d;">此操作将永远删除此博客，且不可撤回</p>
+      <div class="comfirm_btn_container">
+        <el-button onclick="comfirm_del()" class="comfirm_btn" type="danger" plain>确定</el-button>
+        <el-button onclick="cancle_del()" class="comfirm_btn" type="primary" plain>取消</el-button>
+      </div>
+    </div>
+  </div>
+  <div style="display: none;" class="success"><span style="background-color: white;color: #555555;font-size: 26px;">删除成功</span></div>
+
+</div>
+
+
+
+
+
+</body>
+
+
+<!-- VUE -->
+<script>
+  var app = new Vue({
+    el: "#app",
+    data:{
+      value1:true,
+      read_passport:'',
+      index_id:null,
+      index_passport:'',
+      title:'',
+      public:'',
+      date:'',
+      check:'',
+      user_info:{
+        user_avatar:'./IMG/Pic/backgroundPic.png',
+        user_name:'正在加载',
+        user_motto:'正在加载',
+        user_location:'正在加载',
+        user_blogNum:"Nah",
+        user_dairyNum:15
+      },
+      methods:{
+        onConfirm(){
+          alert('sss')
+        }
+      }
+    }
+  })
+</script>
+
+
+<!-- onload事件 -->
+<script>
+  //跳转参数的获取
+  var request =
+  {
+    QueryString: function (val) {
+      var uri = window.location.search;
+      var re = new RegExp("" + val + "=([^&?]*)", "ig");
+      return ((uri.match(re)) ? (uri.match(re)[0].substr(val.length + 1)) : null);
+    }
+  }
+</script>
+<script>
+  window.onload = function(){
+    var raw = request.QueryString("raw")
+    DeCode(raw)
+    var id = app.index_id
+    var passport = app.index_passport
+    var read_passport = app.read_passport
+    if(passport != read_passport){
+      document.getElementsByName('read_btn1')[0].style.display = 'none'
+      document.getElementsByName('read_btn2')[0].style.display = 'none'
+      getBlogData(id,"public")
+    }else{
+      getBlogData(id,passport)
+    }
+
+    changePetsStyle()
+    getUserInfo(read_passport)
+    var dataBase = read_passport + "_blog"
+    var dateBase2 = read_passport + '_dairy'
+    getDataBaseLenth(dataBase,'blog')
+    getDataBaseLenth(dateBase2,'dairy')
+  }
+  function changePetsStyle() {
+    //修改看板娘的位置
+    var div = document.getElementById('waifu')
+    var view = document.getElementById('live2d')
+    var tips = document.getElementById('waifu-tips')
+    div.style.left = 'auto'
+    div.style.right = 0
+    view.style.width = 220 + 'px'
+    view.style.height = 220 + 'px'
+    tips.style.width = 170 + 'px'
+    tips.style.userSelect = 'none'
+  }
+  function DeCode(para){
+    var id =""
+    var passport =""
+    var read_pass = ""
+    var url = para
+    for(var i=0;i<url.length;i++){
+      var check = url.charAt(i)
+      if(check == "%"){
+        i = i + 1
+        for(i;i<url.length;i++){
+          var check_dob = url.charAt(i)
+          if(check_dob == "%"){
+            i = i + 1
+            for(i;i<url.length;i++){
+              read_pass = read_pass + url.charAt(i)
+            }
+            break
+          }else{
+            passport = passport + url.charAt(i)
+          }
+        }
+        break
+      }else{
+        id = id + url.charAt(i)
+      }
+    }
+    app.index_id = Number(id)
+    app.index_passport = passport
+    app.read_passport = read_pass
+  }
+  function checkUser(){
+    var div = document.getElementById("read_btn")
+    if(app.read_passport == app.index_passport){
+      div.style.display = "flex"
+    }else{
+      div.style.display = "none"
+    }
+  }
+
+</script>
+
+<!-- 滚动事件 -->
+<script>
+  window.onscroll = function(){
+    var info = document.getElementsByClassName("user_info_contanier")[0]
+    var func = document.getElementsByClassName("function_bar")[0]
+    var px = document.documentElement.scrollTop
+    console.log(px)
+    if(px >= 540){
+      info.style.position = 'fixed' 
+      func.style.position = 'fixed'
+    }else{
+      info.style.position = 'absolute'
+      func.style.position = 'absolute'
+    }
+  }
+</script>
+
+<!-- 获取blog信息 -->
+<script>
+  function getBlogData(paras,passport){
+
+    console.log(paras,typeof(paras))
+    var para = 'id=' + paras + "&passport=" + passport
+    var url = './PHP/getOneBlog.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json = xhr.responseText
+          var data = eval("(" + json + ")");
+          console.log(data)
+          var strs = ''
+          for(var i=0;i<data.length;i++){
+            // var id = data[i].id;
+            var title = app.title = data[i].title
+            var info = data[i].info
+            var html = data[i].html
+            var author = data[i].author
+            var date = app.date = data[i].date
+            var classify = data[i].classify
+            var public = app.public = data[i].public
+            strs+= "<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i id='blog_icon' class='el-icon-date'></i><div class='date'>"+date+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>"+author+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-setting'></i><div class='classify'>"+classify+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-key'></i><div class='public'>"+public+"</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div style='width: 94%;color: #555555;font-weight: lighter;font-size: 17px;' class='blog_main'>"+html+"</div><div class='blank'></div><div class='blog_btn_container'></div></div>"        
+          }
+          $("#blog_area").html(strs)
+          document.title = app.title
+        }
+      }
+    }
+    xhr.send(para)
+}
+</script>
+<!-- 获取用户信息 -->
+<script>
+  function getUserInfo(parem) {
+    //获取用户个人信息数据
+    var para = 'passport=' + parem
+    var url = './PHP/getUserInfo.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,true)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json_str = xhr.responseText
+          var data = JSON.parse(json_str)
+          app.user_info.user_name = data[0][2]
+          app.user_info.user_motto = data[0][3]
+          app.user_info.user_location = data[0][4]
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+<script>
+  function getDataBaseLenth(paras,check){
+    console.log('pass',paras)
+    var para = "dataBase=" + paras
+    var url = './PHP/getDataBaseLen.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var res = Number(xhr.responseText)
+          setLenData(res,check)
+          // var pages = res/6
+          // app.index = Math.ceil(pages)
+          // app.user_info.user_blogNum = res
+        }
+      }
+    }
+    xhr.send()
+  }
+  function setLenData(para,check){
+    if(check == 'blog'){
+      var pages = para/6
+      app.user_info.user_blogNum = para
+    }else if(check == 'dairy'){
+      app.user_info.user_dairyNum = para
+    }
+    
+  }
+</script>
+
+
+<!-- 搜索框的动态效果 -->
+<script>
+  // 定义搜索框的动态效果
+  function onFocus(input,icon) {
+    var input = document.getElementsByClassName(input)[0];
+    var icon  = document.getElementById(icon);
+    input.style.width = 280 + 'px'
+    input.style.backgroundColor = "white"
+    input.placeholder = ''
+    input.style.color = '#3b3b3b'
+    input.style.animation = 'pull_out 0.3s linear'
+    input.style.borderTopRightRadius = 6 + 'px'
+    input.style.borderBottomRightRadius = 6 + 'px'
+    icon.style.display = 'none'
+  }
+  function onBlur(input,icon) {
+    var input = document.getElementsByClassName(input)[0];
+    var icon  = document.getElementById(icon);
+    input.style.width = 180 + 'px'
+    input.style.backgroundColor = "rgb(99, 99, 99)"
+    input.placeholder = 'search your logs'
+    input.style.color = '#f0f0f0'
+    input.style.animation = 'pull_in 0.3s linear'
+    input.style.borderTopRightRadius = 0 + 'px'
+    input.style.borderBottomRightRadius = 0 + 'px'
+    icon.style.backgroundColor = 'rgb(99, 99, 99)'
+    icon.style.color = '#c3c3c3'
+    icon.style.display = 'flex'
+  }
+  function start_search(params) {
+    var val = document.getElementsByClassName(params)[0].value
+    var div = document.getElementsByName('search_icon')[0]
+    div.className = 'el-icon-loading'
+  }
+</script>
+
+<!-- 删除博客 -->
+<script>
+  function delete_blog(){
+    var div = document.getElementsByClassName('comfirm')[0]
+    div.style.display = 'flex'
+  }
+  function comfirm_del(){
+    var passport = app.read_passport
+    var id = app.index_id
+    var title = app.title
+    var date = app.date
+    var div = document.getElementsByClassName("success")[0]
+    del(passport,date,title)
+    div.style.display = "flex"
+    window.open("homePage.html?passport=" + passport)
+    window.close()
+  }
+  function cancle_del(){
+    var div = document.getElementsByClassName('comfirm')[0]
+    div.style.display = 'none'
+  }
+</script>
+<script>
+  function del(passport,date,title){
+    var para1 = "passport=" + passport + "&type=" + "_blog" + "&date=" + date + "&author=" + passport + "&title=" + title
+    var para2 = "passport=" + "public" + "&type=" + "_blog" + "&date=" + date + "&author=" + passport + "&title=" + title
+    if (app.public == 'public') {
+      activeDel(para1)
+      activeDel(para2)
+    }else if(app.public == 'private'){
+      activeDel(para1)
+    }
+  }
+  function activeDel(para){
+    var url = './PHP/deletePublic.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var res = xhr.responseText
+          console.log(res)
+        }
+      }
+    }
+    xhr.send()
+  }
+</script>
+
+<!-- 修改博客 -->
+<script>
+  function edit_blog(){
+    var raw = app.index_id + "%" + app.index_passport
+    window.location.href = "editorBlog.html?rawData=" + raw;
+  }
+</script>
+
+<!-- 看板娘的开关 -->
+<script>
+  function swicth_pet(){
+    var check = app.value1
+    var div = document.getElementById('waifu')
+    var view = document.getElementById('live2d')
+    var tips = document.getElementById('waifu-tips')
+    if(check == false){
+      div.style.display = 'none'
+      view.style.display = 'none'
+      tips.style.display = 'none'
+    }else{
+      div.style.display = 'block'
+      view.style.display = 'block'
+      tips.style.display = 'block'
+    }
+  }
+</script>
+
+
+
+
+<script>
+  // 点击用户信息栏中的两个按钮事件
+  function click_btn(params) {
+    if(params == 'github'){
+      console.log('1')
+      window.open("https://github.com/Lasia-yxx/Blog")
+    }else if(params == 'share'){
+      console.log('2')
+    }
+  }
+</script>
+
+
+
+
+
+<script>
+
+/* ---- particles.js config ---- */
+
+particlesJS("particles-js", {
+  particles: {
+    number: {
+      value: 80,
+      density: {
+        enable: true,
+        value_area: 800
+      }
+    },
+    color: {
+      value: ["#2EB67D", "#ECB22E", "#E01E5B", "#36C5F0"]
+    },
+    shape: {
+      type: ["circle"],
+      stroke: {
+        width: 0,
+        color: "#fff"
+      },
+      polygon: {
+        nb_sides: 5
+      } 
+    },
+    opacity: {
+      value: 1,
+      random: false,
+      anim: {
+        enable: false,
+        speed: 1,
+        opacity_min: 0.1,
+        sync: false
+      }
+    },
+    size: {
+      value: 8,
+      random: true,
+      anim: {
+        enable: false,
+        speed: 10,
+        size_min: 10,
+        sync: false
+      }
+    },
+    line_linked: {
+      enable: true,
+      distance: 150,
+      color: "#808080",
+      opacity: 0.4,
+      width: 1
+    },
+    move: {
+      enable: true,
+      speed: 5,
+      direction: "none",
+      random: false,
+      straight: false,
+      out_mode: "out",
+      bounce: false,
+      attract: {
+        enable: false,
+        rotateX: 600,
+        rotateY: 1200
+      }
+    }
+  },
+  interactivity: {
+    detect_on: "canvas",
+    events: {
+      onhover: {
+        enable: true,
+        mode: "grab"
+      },
+      onclick: {
+        enable: true,
+        mode: "push"
+      },
+      resize: true
+    },
+    modes: {
+      grab: {
+        distance: 140,
+        line_linked: {
+          opacity: 1
+        }
+      },
+      bubble: {
+        distance: 400,
+        size: 40,
+        duration: 2,
+        opacity: 8,
+        speed: 3
+      },
+      repulse: {
+        distance: 200,
+        duration: 0.4
+      },
+      push: {
+        particles_nb: 4
+      },
+      remove: {
+        particles_nb: 2
+      }
+    }
+  },
+  retina_detect: true
+});
+</script>
+
+</html>

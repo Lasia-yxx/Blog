@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>修改博客</title>
+  <!-- import element-ui css -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <link href="./CSS/write.css" type="text/css" rel="stylesheet">
+</head>
+
+<!-- import VUE , element UI , wangEditor -->
+<script src="https://unpkg.com/wangeditor/release/wangEditor.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<body>
+  <div id="app">
+
+    <div class="editor_container">
+
+      <el-form ref="form" :model="form" label-width="80px">
+        <el-form-item style="margin-top: 35px;" label="标题">
+          <el-input onkeyup="getTitle()" maxlength='28' style="width: 420px;font-size: 16px;" v-model="form.title"
+            placeholder='输入文章标题，不超过28个字'></el-input>
+        </el-form-item>
+
+        <el-form-item label="简介">
+          <el-input onkeyup="getInfo()" resize='none' type="textarea" v-model="form.info"
+            placeholder='输入文章简介，建议在200字左右'></el-input>
+        </el-form-item>
+        <el-form-item style="margin-top: 20px;display: flex;flex-direction: row-reverse;">
+          <el-select v-model="select_value" placeholder="请选择博客类型">
+            <el-option style="width: 120px;"
+              v-for="item in options"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+          <el-switch onclick="closeEditor()" style="margin-right: 5px;" v-model="value1" active-text="隐藏编辑器"></el-switch>
+          <el-tooltip class="item" effect="dark" content="在编辑模式下该功能无法使用" placement="top">
+            <el-switch onclick="publicEditor()" style="margin-right: 5px;" v-model="value2" active-text="博客共享" disabled></el-switch>
+          </el-tooltip> 
+          <el-button id='submit' type="primary" @click="onSubmit">立即更新</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <div class="divide"></div>
+    <div class="user_main_container">
+
+      <div class="blog">
+        <div class="title">{{form.title}}</div>
+        <div class="blog_info_container">
+          <i id="blog_icon" class="el-icon-date"></i>
+          <div class="date">{{date}}</div>
+          <i id="blog_icon" style="margin-left: 25px;" class="el-icon-user"></i>
+          <div class="author">{{author}}</div>
+          <i id="blog_icon" style="margin-left: 25px;" class="el-icon-setting"></i>
+          <div class="classify">{{select_value}}</div>
+          <i id="blog_icon" style="margin-left: 25px;" class="el-icon-unlock"></i>
+          <div class="public">{{public}}</div>
+        </div>
+        <div class="preface_container">
+          <h2 style="color: #525252;">前言</h2>
+          <div class="preface">{{form.info}} </div>
+        </div>
+        <div style="width: 94%;color: #555555;font-weight: lighter;font-size: 17px;" class="blog_main"></div>
+        <div style="border-bottom: 1px solid #d5d5d5;" class="blank"></div>
+        <div class="blank"></div>
+        <div class="position"></div>
+      </div>
+    </div>
+
+    <div id="wang" class="editor">
+      
+    </div>
+
+  </div>
+</body>
+
+<script>
+  var app = new Vue({
+    el: "#app",
+    data:{
+      value1:false,
+      value2:false,
+      id:null,
+      passport:'',
+      public:'private',
+      form: {
+          title: '',
+          info: ''
+        },
+      options: [{
+          value: 'HTML/CSS/JS',
+          label: 'HTML/CSS/JS'
+        }, {
+          value: 'PHP',
+          label: 'PHP'
+        }, {
+          value: 'C/Cpp',
+          label: 'C/C++'
+        }, {
+          value: 'Java',
+          label: 'Java'
+        }, {
+          value: 'Python',
+          label: 'Python'
+        }, {
+          value: '其他技术类',
+          label: '其他技术类'
+        }],
+      select_value: '',
+      html:'',
+      date:'undefind',
+      author:'undefind',
+      classify:'undefind',
+      public:'undefind',
+
+      index_title:'undefind',
+      index_classify:'undefind',
+      index_author:'undefind',
+      index_date:'undefind'
+    },
+    methods: {
+      onSubmit() {
+        if(app.form.title == '' || app.form.info == '' || app.html == '' || app.select_value == ''){
+          console.log('app.form.title',app.form.title)
+          console.log('app.form.info',app.form.info)
+          console.log('app.html',app.html)
+          console.log('app.select_value',app.select_value)
+        }else if(app.public == 'private'){
+          var date = new Date().Format("yyyy-MM-dd");
+          console.log(date)
+          var title = app.form.title
+          var info = app.form.info
+          var html = app.html
+          var passport = app.passport
+          var classify = app.select_value
+          var id = app.id
+          var dataBase = app.passport + "_blog"
+          var para1 ="title="+title+"&info="+info+"&html="+html+"&passport="+passport+"&date="+date+"&classify="+classify+"&id="+id+"&dataBase="+dataBase
+          uploadBlog(para1)
+        }else if(app.public == 'public'){
+          var date = new Date().Format("yyyy-MM-dd");
+          console.log(date)
+          var title = app.form.title
+          var info = app.form.info
+          var html = app.html
+          var passport = app.passport
+          var classify = app.select_value
+          var id = app.id
+          var dataBase1 = app.passport + "_blog"
+          var dataBase2 = 'public_blog'
+          var para1 ="title="+title+"&info="+info+"&html="+html+"&passport="+passport+"&date="+date+"&classify="+classify+"&id="+id+"&dataBase="+dataBase1
+          var para2 ="title="+title+"&info="+info+"&html="+html+"&passport="+passport+"&date="+date+"&classify="+classify+"&id="+id+"&dataBase="+dataBase2+"&index_title="+app.index_title+"&index_classify="+app.index_classify+"&index_author="+app.index_author+"&index_date="+app.index_date
+          uploadBlog(para1)
+          uploadPublicBlog(para2)
+        }
+      }
+    }
+  })
+</script>
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<!-- 富文本编辑器函数配置 -->
+<script type="text/javascript">
+  var E = window.wangEditor
+  var editor = new E('.editor')
+  editor.customConfig.uploadImgServer = "./php/uploadBlogPic.php";  // 上传图片到服务器
+  editor.customConfig.uploadFileName = "upload_file";      //文件名称  也就是你在后台接受的 参数值
+  editor.customConfig.uploadImgHeaders = {    //header头信息 
+    'Accept': 'text/x-json'
+  }
+  editor.customConfig.uploadImgMaxSize = 2 * 1024 * 1024   //默认为5M
+  editor.customConfig.uploadImgShowBase64 = false;   // 不使用 base64 保存图片
+  editor.customConfig.debug = true;
+
+  editor.customConfig.uploadImgHooks = {  
+    error: function (xhr, editor) {
+      alert("2：" + xhr + "请查看你的json格式是否正确，图片并没有上传");
+      // 图片上传出错时触发  如果是这块报错 就说明文件没有上传上去，直接看自己的json信息。是否正确
+      // xhr 是 XMLHttpRequst 对象，editor 是编辑器对象
+    },
+    fail: function (xhr, editor, result) {
+      //  如果在这出现的错误 就说明图片上传成功了 但是没有回显在编辑器中，我在这做的是在原有的json 中添加了
+      //  一个url的key（参数）这个参数在 customInsert也用到
+      //  
+      console.log(editor,'result')
+      alert("1：" + xhr + "请查看你的json格式是否正确，图片上传了，但是并没有回显");
+    },
+    success:function(xhr, editor, result){
+      //成功 不需要alert 当然你可以使用console.log 查看自己的成功json情况 
+      //console.log(result)
+    },
+  };
+  editor.customConfig.showLinkImg = true; //是否开启网络图片，默认开启的。
+  editor.create()
+
+  document.getElementById('submit').addEventListener('mouseover', function () {
+        // console.log("11")
+        app.html = editor.txt.html()
+    }, false)
+
+  document.getElementById('wang').addEventListener('keyup', function () {
+        // 读取 html
+        // alert(editor.txt.html())
+        app.html = editor.txt.html()
+        console.log(app.html)
+        $(".blog_main").empty()
+        $(".blog_main").html(editor.txt.html())
+    }, false)
+
+</script>
+
+<!-- 调用Ajax进行上传操作 -->
+<script>
+  function uploadBlog(paras){
+    var para = paras
+    var url = './PHP/editorBlog.php' 
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open("POST",url,false)
+    xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var res = xhr.responseText
+          alert(res)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+  function uploadPublicBlog(paras){
+    var para = paras
+    var url = './PHP/editorBlogPublic.php' 
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open("POST",url,false)
+    xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var res = xhr.responseText
+          alert(res)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script> 
+
+<!-- 页面跳转设置 -->
+<script>
+  var request =
+  {
+    QueryString: function (val) {
+      var uri = window.location.search;
+      var re = new RegExp("" + val + "=([^&?]*)", "ig");
+      return ((uri.match(re)) ? (uri.match(re)[0].substr(val.length + 1)) : null);
+    }
+  }
+</script>
+<script>
+  window.onload = function(){
+    var raw = request.QueryString("rawData")
+    Decode(raw)
+    // app.date = new Date().Format("yyyy-MM-dd");
+    getBlogData(app.id,app.passport)
+    if(app.public == 'public'){
+      //待处理
+    }
+  }
+  function Decode(url){
+    var id =""
+    var passport =""
+    for(var i=0;i<url.length;i++){
+      var check = url.charAt(i)
+      if(check == "%"){
+        i = i + 1
+        for(i;i<url.length;i++){
+          passport = passport + url.charAt(i)
+        }
+        break
+      }else{
+        id = id + url.charAt(i)
+      }
+    }
+    for(i;i<url.length;i++){
+      passport = passport + url.charAt(i)
+    }
+    console.log("id",id,typeof(id))
+    console.log("pass",passport,typeof(passport))
+    app.id = Number(id)
+    app.passport = passport
+  }
+  function getBlogData(id,passport){
+    var para = 'id=' + id + "&passport=" + passport
+    var url = './PHP/getOneBlog.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json = xhr.responseText
+          var data = eval("(" + json + ")");
+          console.log(data)
+          var strs = ''
+          for(var i=0;i<data.length;i++){
+            // var id = data[i].id;
+            app.form.title = data[i].title
+            app.form.info = data[i].info
+            app.html = data[i].html
+            app.author = data[i].author
+            app.date = data[i].date
+            app.classify = data[i].classify
+            app.select_value = data[i].classify
+            app.public = data[i].public
+            
+            //以下数据用于元数据的保存，用于在共有博客数据库中选中相应数据
+            app.index_title = data[i].title
+            app.index_classify = data[i].classify
+            app.index_author = data[i].author
+            app.index_date = data[i].date
+          }
+          // $(".w-e-text").empty()
+          // document.getElementById('wang').innerHTML = html
+          $(".w-e-text").html(app.html)
+          document.title = app.form.title
+        }
+      }
+    }
+    xhr.send(para)
+  }
+
+</script>
+
+<!-- 两个设置按钮 -->
+<script>
+  function getTitle(){
+    console.log(app.form.name)
+  }
+  function getInfo(){
+    console.log(app.form.desc)
+  }
+  function closeEditor(){
+    var check = app.value1
+    if(check == true){
+      document.getElementById('wang').style.display = 'none'
+    }else if(check == false){
+      document.getElementById('wang').style.display = 'block'
+    }else{
+      alert("something wrong please reboot browser")
+    }
+  }
+  function publicEditor(){
+    var check = app.value2
+    if(check == false){
+      app.public = "private"
+    }else if(check == true){
+      app.public = "public"
+    }else{
+      alert("something wrong please reboot browser")
+    }
+  }
+
+</script>
+
+<script>
+//获取当前时间，并格式化输出
+Date.prototype.Format = function (fmt) {
+    var o = {
+        "M+": this.getMonth() + 1, //月份 
+        "d+": this.getDate(), //日 
+        "H+": this.getHours(), //小时 
+        "m+": this.getMinutes(), //分 
+        "s+": this.getSeconds(), //秒 
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+        "S": this.getMilliseconds() //毫秒 
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
+</script>
+
+</html>

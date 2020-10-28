@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>您的个人博客</title>
+    <!-- import element-ui css -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    
+    <link href="./CSS/home_pages.css" type="text/css" rel="stylesheet">
+    
+  </head>
+
+<body>
+  <button onclick="ss()">sss</button>
+</body>
+
+
+<script>
+  function ss(){
+    var para = "ss=" + 8
+    var url = './PHP/test.php?' + para 
+    var xhr = new XMLHttpRequest();
+    xhr.open('get',url,true)
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          console.log(xhr.responseText)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+</html>

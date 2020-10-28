@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>您的个人博客</title>
+    <!-- import element-ui css -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    
+    <link href="./CSS/home_pages.css" type="text/css" rel="stylesheet">
+    
+  </head>
+
+<!-- import jQuery  --> 
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+<!-- import Vue and Element UI -->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<!-- 引入看板娘 -->
+<script src="https://cdn.jsdelivr.net/gh/stevenjoezhang/live2d-widget@latest/autoload.js"></script>
+
+<body>
+  <script src="./JavaScript/canvas.js"></script>
+  
+  <div id="app">
+    <div id="particles-js">
+      <canvas width="1920" height="910" id="canvas" class="particles-js-canvas-el">
+    </div>
+    <div id="top_bar">
+      <div style="font-size: 22px;margin-left: 20px;max-width: 120px;" class="Name">{{user_passport}}</div>
+      <el-divider  direction="vertical"></el-divider>
+      <div style="font-size: 18px;font-weight: lighter;" class="Name_add">个人博客</div>
+      <input onblur="onBlur('search_input','search_icon_container')" onfocus="onFocus('search_input','search_icon_container')" class="search_input" placeholder="search your logs" />
+      <div id="search_icon_container" onclick="start_search('search_input')"><i name="search_icon" class="el-icon-search"></i></div>
+      <div id="top_link" style="color:#6ab2fd;font-weight: bold;" class="top_link">博客</div>
+      <div id="top_link" class="top_link">日记</div>
+      <div id="top_link" style="letter-spacing: 2px;" class="top_link">技术分享</div>
+      <div id="top_link" style="letter-spacing: 2px;" class="top_link">个人主页</div>
+      <!-- <i id="notice" class="el-icon-message"></i> -->
+    </div>
+
+    <div id="user_backDrop">
+      <img class="background_top" src="./IMG/Pic/background_top.jpg" />
+      <div class="motto">"抓不住的那个夏天"</div>
+    </div>
+
+    <div id="main_function">
+
+      <!-- 用户信息 -->
+      <div class="user_info_contanier">
+        <img class="user_avatar" :src="user_info.user_avatar"/>
+        <div class="user_name">{{user_info.user_name}}</div>
+        <div class="user_motto">{{user_info.user_motto}}</div>
+        <div class="user_position">
+          <i id="location_icon" class="el-icon-location-information"></i>
+          <div class="location">{{user_info.user_location}}</div>
+        </div>
+        <div class="statistics_container">
+          <div class="blog_statistics" style="border-right: 1px solid #DCDFE6;">
+            <div class="statistics_num">{{user_info.user_blogNum}}</div>
+            <div class="statistics_name">博客</div>
+          </div>
+          <div class="diary_statistics">
+            <div class="statistics_num">{{user_info.user_dairyNum}}</div>
+            <div class="statistics_name">生活日记</div>
+          </div>
+        </div>
+        <div class="button_container">
+          <div class="github_btn">
+            <el-tooltip class="item" effect="dark" content="GitHub" placement="top">
+              <el-button type='text'><img class="btn" onclick="click_btn('github')" name='github' src="IMG\Icon\github.png" /></el-button>
+            </el-tooltip>
+          </div>
+          <div class="share_btn">
+            <el-tooltip class="item" effect="dark" content="分享" placement="top">
+              <el-button type='text'><img class="btn" onclick="click_btn('share')" name='share' src="IMG\Icon\share.png" /></el-button>
+            </el-tooltip>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户博客 -->
+      <div class="user_main_container">
+        <div id="blog_area" style="width: 100%;">
+          
+          <!-- <div class="blog">
+            <div class="title">Dubbo 迈向云原生的里程碑 | 应用级服务发现</div>
+            <div class="blog_info_container">
+              <i id="blog_icon" class="el-icon-date"></i>
+              <div class="date">2020-08-14</div>
+              <i id="blog_icon" style="margin-left: 25px;" class="el-icon-user"></i>
+              <div class="author">Lasia</div>
+              <i id="blog_icon" style="margin-left: 25px;" class="el-icon-setting"></i>
+              <div class="classify">Java</div>
+              <i id="blog_icon" style="margin-left: 25px;" class="el-icon-unlock"></i>
+              <div class="public">private</div>
+            </div>
+            <div class="preface_container">
+              <h2 style="color: #525252;">前言</h2>
+              <div class="preface">社区版本 </div>
+            </div>
+            <div class="blank"></div>
+            <div class="blog_btn_container">
+              <el-button round>查看更多</el-button>
+            </div>
+            <div style="display: none;" class="blog_id">5</div>
+          </div> -->
+          
+        </div>
+        <div class="block" style="display: flex;align-items: center;justify-content: center; margin-bottom: 60px;">
+          <el-pagination
+            background
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page.sync="currentPage"
+            layout="prev, pager, next, jumper"
+            :page-count='index'>
+          </el-pagination>
+        </div>
+      </div>
+      
+      <!-- 博客信息总览 -->
+      <div class="blog_setting_container">
+        <div class="switch_container">
+          <div class="switch" style="border-right: 1px solid #DCDFE6;">
+            <el-dropdown>
+              <el-button icon="el-icon-edit" style="width: 92px;height: 30px;display: flex;align-items: center;justify-content: center;"></el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item onclick="writeBlog()">写文章</el-dropdown-item>
+                <el-dropdown-item onclick="writeDairy()">写日记</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+        </div>
+          <div class="switch"><el-switch onclick="pet()" v-model="value2" active-text="看板娘"></el-switch></div>
+        </div>
+        <div class="classification_container">
+          <div class="classification_title">文章类别</div>
+          <div class="classification_link"><el-link :id="classify.HTML" class="link" name='HTML/CSS/JS' :underline="false">HTML/CSS/JS ({{classify.HTML}})</el-link></div>
+          <div class="classification_link"><el-link :id="classify.PHP" class="link" name="PHP" :underline="false">PHP ({{classify.PHP}})</el-link></div>
+          <div class="classification_link"><el-link :id="classify.C" class="link" name="C/Cpp" :underline="false">C/C++ ({{classify.C}})</el-link></div>
+          <div class="classification_link"><el-link :id="classify.Java" class="link" name="Java" :underline="false">Java ({{classify.Java}})</el-link></div>
+          <div class="classification_link"><el-link :id="classify.Python" class="link" name="python" :underline="false">Python ({{classify.Python}})</el-link></div>
+          <div class="classification_link"><el-link :id="classify.other" class="link" name="其他技术类" :underline="false">其他技术类 ({{classify.other}})</el-link></div>
+        </div>
+      </div>
+      
+      <div style="display: none;" class="user_dairy_container">
+        <div class="dairy_area">
+<!-- 
+          <div class="dairy_contianer">
+            <div class="user_dairy_title">热烈庆祝博客站正式上线</div>
+            <div class="dairy_basic_container">
+              <i id="dairy_icon" class="el-icon-date"></i>
+              <div class="dairy_date">2020-08-21</div>
+            </div>
+            <div class="dairy_img_container">
+              <img class="dairy_img" src=".\PHP\uploads\8c4fcdba3ee0612aa67d92b8a872db08.jpg" />
+            </div>
+            <div class="dairy_info">欢天喜地，人山人海，皆大欢喜，人见人爱</div>
+            <div class="dairy_blank"></div>
+            <button class="dairy_delete">删除</button>
+            <div style="display: none;" id=''></div>
+          </div> -->
+          
+        </div>
+        <div class="block" style="display: flex;align-items: center;justify-content: center; margin-bottom: 60px;">
+          <el-pagination
+            background
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page.sync="currentPage"
+            layout="prev, pager, next, jumper"
+            :page-count='index'>
+          </el-pagination>
+        </div>
+      </div>
+      
+    </div>
+
+    
+
+    <!-- 日记上传视图 -->
+    <div style="display: none;" class="dairy_background">
+      <div class="dairy_container">
+        <form name='form1' method="POST" action="./PHP/uploadDairy.php" enctype="multipart/form-data">
+          <div class="up_pic_container">
+            <div class="label">标题</div>
+            <input type="hidden" name="date"/>
+            <input type="hidden" name="passport"/>
+            <input name="title" class="up_pic_title"  placeholder='输入日记标题，不超过28个字'></input>
+          </div>
+          <div class="up_pic_container">
+            <div class="label">简介</div>
+            <input name="info" class="up_pic_info"  placeholder='输入日记简介，可忽略不填写'></input>
+          </div>
+          <div style="align-items: unset;" class="up_pic_container">
+            <div style="letter-spacing: unset;font-size: 16px;" class="label">上传图片</div>
+            <div class="up_contianer">
+              <i class="el-icon-plus"></i>
+              <input class="up_pic" type="file" name="file" id="file" />
+            </div>
+          </div>
+          <input type="submit" onclick="readySubmit()" name="upload" id="upload_btn" value="提交">
+        </form>
+      </div>
+    </div>
+
+
+
+  </div>
+
+
+
+
+
+</body>
+
+
+<!-- VUE -->
+<script>
+  // VUE渲染数据
+  var app = new Vue({
+    el:'#app',
+    data:{
+      value1: false, //时间轴按钮
+      value2: true,  //看板娘按钮
+      passport:'loading',
+      user_passport:'',
+      top_bar_select:'博客',
+      index:0,  //blog总页数
+      currentPage:1, //初始显示页数
+      user_info:{
+        user_avatar:'./IMG/Pic/backgroundPic.png',
+        user_name:'正在加载',
+        user_motto:'正在加载',
+        user_location:'正在加载',
+        user_blogNum:"Nah",
+        user_dairyNum:"Nah"
+      },
+      form: {
+          title: '',
+          info: ''
+      },
+      classify:{
+        HTML:22,
+        PHP:0,
+        C:0,
+        Java:0,
+        Python:0,
+        other:0,
+      },
+      
+    },
+    methods:{
+      handleSizeChange(val) {
+        console.log(`每页 ${val} 条`);
+      },
+      handleCurrentChange(val) {
+        var check = app.top_bar_select
+        var passport = app.passport
+        var index_L = (val-1)*6
+        index_L = String(index_L)
+        $('html,body').animate({scrollTop: '0px'}, 700)
+        if(check == '博客'){
+          getBlogData(index_L,passport)
+        }else if(check == '日记'){
+          var index = (val-1)*4
+          index = String(index)
+          getDairyData(index,passport)
+        }else if(check == '技术分享'){
+          getPublicBlog(index_L,app.passport)
+        }else{
+          getClassifyBlog(index_L,app.passport,app.top_bar_select)
+        }
+    },
+    }
+  })
+</script>
+<!--  -->
+
+<!-- onload事件，修改看板娘样式和获取登录信息 -->
+<script>
+  //跳转参数的获取
+  var request =
+  {
+    QueryString: function (val) {
+      var uri = window.location.search;
+      var re = new RegExp("" + val + "=([^&?]*)", "ig");
+      return ((uri.match(re)) ? (uri.match(re)[0].substr(val.length + 1)) : null);
+    }
+  }
+</script>
+<script>
+  // 当页面加载后对看板娘样式进行修改，可能会造成看板娘的闪烁bug
+  window.onload = function(){
+    document.getElementsByClassName('dairy_background')[0].style.display = 'none'
+    document.getElementsByName('title')[0].value = ''
+    document.getElementsByName("info")[0].value = ''
+    document.getElementById('file').value = ''
+    var init = "0"
+    var passport = request.QueryString("passport")
+    // app.passport = passport
+    var dataBase = passport + "_blog"
+    var dateBase2 = passport + '_dairy'
+    getBlogData(init,passport)
+    getUserInfo(passport)
+    changePetsStyle()
+    getDataBaseLenth(dataBase,'blog')
+    getDataBaseLenth(dateBase2,'dairy')
+    getClassifyLen(dataBase)
+  }
+
+  function getDataBaseLenth(paras,check){
+    console.log('pass',paras)
+    var para = "dataBase=" + paras
+    var url = './PHP/getDataBaseLen.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var res = Number(xhr.responseText)
+          setLenData(res,check)
+          // var pages = res/6
+          // app.index = Math.ceil(pages)
+          // app.user_info.user_blogNum = res
+        }
+      }
+    }
+    xhr.send()
+  }
+  function changePetsStyle() {
+    //修改看板娘的位置
+    var div = document.getElementById('waifu')
+    var view = document.getElementById('live2d')
+    var tips = document.getElementById('waifu-tips')
+    div.style.left = 'auto'
+    div.style.right = 0
+    view.style.width = 220 + 'px'
+    view.style.height = 220 + 'px'
+    tips.style.width = 170 + 'px'
+    tips.style.userSelect = 'none'
+  }
+  function getUserInfo(parem) {
+    //获取用户个人信息数据
+    var para = 'passport=' + parem
+    var url = './PHP/getUserInfo.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,true)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json_str = xhr.responseText
+          var data = JSON.parse(json_str)
+          app.passport = data[0][1]
+          app.user_info.user_name = data[0][2]
+          app.user_passport = data[0][2]
+          app.user_info.user_motto = data[0][3]
+          app.user_info.user_location = data[0][4]
+          document.title = app.user_passport + '个人博客'
+          console.log("!!!!!!!!!!",app.passport)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+  function setLenData(para,check){
+    if(check == 'blog'){
+      var pages = para/6
+      app.index = Math.ceil(pages)
+      app.user_info.user_blogNum = para
+    }else if(check == 'dairy'){
+      app.user_info.user_dairyNum = para
+    }
+    
+  }
+  function getClassifyLen(dataBase){
+    var para = "dataBase=" + dataBase
+    var url = './PHP/getClassifyLen.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json = xhr.responseText
+          // var data = eval("(" + json + ")");
+          console.log("classifyLen",json,typeof(json))
+          var strs =json.split(',');
+          console.log(strs,typeof(strs))
+            app.classify.HTML = strs[1]
+            app.classify.PHP = strs[2]
+            app.classify.C = strs[3]
+            app.classify.Java = strs[4]
+            app.classify.Python = strs[5]
+            app.classify.other = strs[6]
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+<script>
+  function getBlogData(paras,passport){
+
+    console.log(paras,typeof(paras))
+    var para = 'star=' + paras + "&passport=" + passport
+    var url = './PHP/getBlog.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json = xhr.responseText
+          var data = eval("(" + json + ")");
+          console.log(data)
+          var strs = ''
+          for(var i=0;i<data.length;i++){
+            var id = data[i].id;
+            var title = data[i].title
+            var info = data[i].info
+            // var html = data[i].html
+            var author = data[i].author
+            var date = data[i].date
+            var classify = data[i].classify
+            var public = data[i].public
+            // strs+="<li> "+id+" / <span> "+title+" </span></li>"
+            strs+="<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i id='blog_icon' class='el-icon-date'></i><div class='date'>"+date+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>"+author+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-setting'></i><div class='classify'>"+classify+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-key'></i><div class='public'>"+public+"</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div class='blank'></div><div class='blog_btn_container'><button onclick='getMore("+id+")'>查看更多</button></div><div style='display: none' id="+id+">"+author+"</div></div> "
+            // strs+="<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i class='el-icon-date'></i><div class='date'>"+date+"</div><i style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>lasia</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div class='blank'></div><div class='blog_btn_container'><button onclick='getMore("+id+")'>查看更多</button></div></div> "
+
+          }
+          $("#blog_area").html(strs)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+<!--  -->
+
+
+
+
+
+
+
+<!-- 设置页面滚动时，用户信息栏的状态 -->
+<script>
+  //设置用户信息栏随着下拉窗口的变化而变化
+  var info = document.getElementsByClassName('user_info_contanier')[0]
+  var classify = document.getElementsByClassName('blog_setting_container')[0]
+  window.onscroll = function(){
+    var px = document.documentElement.scrollTop
+    //console.log(px)
+    if(px >= 920){
+      classify.style.position = 'fixed'
+      classify.style.top = 150 + 'px'
+      info.style.position = 'fixed'
+      info.style.top = 140 + 'px'
+    }else if(px <= 440){
+        classify.style.top = 535 + 'px'
+        classify.style.position = 'absolute'
+        console.log('less')
+        info.style.position = 'relative'
+        info.style.top = 535 + 'px'
+    }
+  }
+</script>
+<!--  -->
+
+<!-- 搜索框的动画效果 -->
+<script>
+  // 定义搜索框的动态效果
+  function onFocus(input,icon) {
+    var input = document.getElementsByClassName(input)[0];
+    var icon  = document.getElementById(icon);
+    input.style.width = 280 + 'px'
+    input.style.backgroundColor = "white"
+    input.placeholder = ''
+    input.style.color = '#3b3b3b'
+    input.style.animation = 'pull_out 0.3s linear'
+    input.style.borderTopRightRadius = 6 + 'px'
+    input.style.borderBottomRightRadius = 6 + 'px'
+    icon.style.display = 'none'
+  }
+  function onBlur(input,icon) {
+    var input = document.getElementsByClassName(input)[0];
+    var icon  = document.getElementById(icon);
+    input.style.width = 180 + 'px'
+    input.style.backgroundColor = "rgb(99, 99, 99)"
+    input.placeholder = 'search your logs'
+    input.style.color = '#f0f0f0'
+    input.style.animation = 'pull_in 0.3s linear'
+    input.style.borderTopRightRadius = 0 + 'px'
+    input.style.borderBottomRightRadius = 0 + 'px'
+    icon.style.backgroundColor = 'rgb(99, 99, 99)'
+    icon.style.color = '#c3c3c3'
+    icon.style.display = 'flex'
+  }
+  function start_search(params) {
+    var val = document.getElementsByClassName(params)[0].value
+    var div = document.getElementsByName('search_icon')[0]
+    div.className = 'el-icon-loading'
+  }
+</script>
+<!--  -->
+
+<!-- 顶部栏的四个导航 -->
+<script>
+  $(function(){
+
+    $('.top_link').unbind("click").bind("click",function click_jq(){
+      $('html,body').animate({scrollTop: '0px'}, 1000)
+      var index = $(this).text()
+      $('.top_link').css({color:"white",fontWeight:'lighter'})
+      $(this).css({color:"#6ab2fd",fontWeight:'bold'})
+      $('.link').css({color:"#606266"})
+      if(index == '博客' && index !== app.top_bar_select){
+        $('.user_main_container').css({display:"flex"})//设置博客窗口和日记窗口的切换
+        $('.classification_container').css({display:"flex"})//设置博客窗口和日记窗口的切换
+        $('.user_dairy_container').css({display:"none"})//设置博客窗口和日记窗口的切换
+        var dataBase = app.passport + "_blog"
+        getDataBaseLenth(dataBase,'blog')
+        getBlogData('0',app.passport)
+        app.top_bar_select = index//设置顶部栏的状态
+        app.currentPage = 1
+      }else if(index == '日记' && index !== app.top_bar_select){
+        $('.user_main_container').css({display:"none"})//设置博客窗口和日记窗口的切换
+        $('.classification_container').css({display:"none"})//设置博客窗口和日记窗口的切换
+        $('.user_dairy_container').css({display:"flex"})//设置博客窗口和日记窗口的切换
+        app.top_bar_select = index   //设置顶部栏的状态
+        var dataBase = app.passport + "_dairy"
+        getDataBaseLenth(dataBase,'dairy')
+        app.index = Math.ceil(app.user_info.user_dairyNum/4)//更新分页页数
+        getDairyData('0',app.passport)
+        app.currentPage = 1
+      }else if(index == '技术分享' && index !== app.top_bar_select){
+        $('.user_main_container').css({display:"flex"})//设置博客窗口和日记窗口的切换
+        $('.classification_container').css({display:"flex"})//设置博客窗口和日记窗口的切换
+        $('.user_dairy_container').css({display:"none"})//设置博客窗口和日记窗口的切换
+        app.top_bar_select = index
+        console.log(index)
+        getPublicLen(app.passport)
+        getPublicBlog('0',app.passport)
+      }else if(index == '个人主页' && index !== app.top_bar_select){
+        alert("该功能暂未开发")
+      }
+    })
+  })
+</script>
+<!-- 获取公共文章长度 -->
+<script>
+  function getPublicLen(passport){
+    para = "passport=" + passport
+    var url = './PHP/getPublicLen.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var res = Number(xhr.responseText)
+          pages = res / 6
+          app.index = Math.ceil(pages)
+          app.currentPage = 1
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+<!-- 获取公共文章数据 -->
+<script>
+  function getPublicBlog(star,passport){
+    var para = 'star=' + star + "&passport=" + passport
+    var url = './PHP/getPublicBlog.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json = xhr.responseText
+          var data = eval("(" + json + ")");
+          console.log(data)
+          var strs = ''
+          for(var i=0;i<data.length;i++){
+            var id = data[i].id;
+            var title = data[i].title
+            var info = data[i].info
+            // var html = data[i].html
+            var author = data[i].author
+            var date = data[i].date
+            var classify = data[i].classify
+            var public = data[i].public
+            // strs+="<li> "+id+" / <span> "+title+" </span></li>"
+            strs+="<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i id='blog_icon' class='el-icon-date'></i><div class='date'>"+date+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>"+author+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-setting'></i><div class='classify'>"+classify+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-key'></i><div class='public'>"+public+"</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div class='blank'></div><div class='blog_btn_container'><button onclick='getMore("+id+")'>查看更多</button></div><div style='display: none' id="+id+">"+author+"</div></div> "
+            // strs+="<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i class='el-icon-date'></i><div class='date'>"+date+"</div><i style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>lasia</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div class='blank'></div><div class='blog_btn_container'><button onclick='getMore("+id+")'>查看更多</button></div></div> "
+
+          }
+          $("#blog_area").html(strs)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+
+
+
+<!-- 获取日记数据 -->
+<script>
+  function getDairyData(paras,passport){
+    console.log(paras,typeof(paras))
+    var para = 'star=' + paras + "&passport=" + passport
+    var url = './PHP/getDairy.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json = xhr.responseText
+          var data = eval("(" + json + ")");
+          console.log(data)
+          var strs = ''
+          for(var i=0;i<data.length;i++){
+            var id = data[i].id;
+            var title = data[i].title
+            var info = data[i].info
+            var date = data[i].date
+            var src = data[i].src
+
+            strs+="<div class='dairy_contianer'><div class='user_dairy_title'>"+title+"</div><div class='dairy_basic_container'><i id='dairy_icon' class='el-icon-date'></i><div class='dairy_date'>"+date+"</div></div><div class='dairy_img_container'><img class='dairy_img' src='"+src+"' /></div><div class='dairy_info'>"+info+"</div><div class='dairy_blank'></div><button onclick='delete_dairy("+id+")' class='dairy_delete'>删除</button><div style='display: none;' id="+id+"></div></div>"
+            // strs+="<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i class='el-icon-date'></i><div class='date'>"+date+"</div><i style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>lasia</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div class='blank'></div><div class='blog_btn_container'><button onclick='getMore("+id+")'>查看更多</button></div></div> "
+
+          }
+          $(".dairy_area").html(strs)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+<!-- 日记删除按钮函数 -->
+<script>
+  function delete_dairy(id){
+    var passport = app.passport
+    var type = "_dairy"
+    var para = "id=" + id + "&passport=" + passport + "&type=" + type
+    var url = './PHP/delete.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var res = xhr.responseText
+          var tips = res + ",刷新后生效"
+          alert(tips)
+        }
+      }
+    }
+    xhr.send()
+
+  }
+</script>
+
+<!-- 选定博客，获取博客对应的ID属性，方便使用数据库查询 -->
+<script>
+  function getMore(id){
+    var id_str = String(id)
+    var passport = document.getElementById(id).innerHTML
+    var raw = id_str + "%" + passport + "%" + app.passport
+    window.location.href = "readBlog.html?raw=" + raw;
+  }
+</script>
+
+<!-- 用户信息栏中的两个按钮事件 -->
+<script>
+  // 点击用户信息栏中的两个按钮事件
+  function click_btn(params) {
+    if(params == 'github'){
+      console.log('1')
+      window.open("https://github.com/Lasia-yxx/Blog")
+    }else if(params == 'share'){
+      alert("该功能暂未开发")
+    }
+  }
+</script>
+<!--  -->
+
+<!-- 右侧边栏两个按钮事件 -->
+<script>
+  function writeBlog(){
+    window.open("writeBlog.html?passport=" + app.passport);
+  }
+  function writeDairy(){
+    document.getElementsByClassName('dairy_background')[0].style.display = 'flex'
+  }
+  //看板娘按钮事件
+  function pet(){
+    var div = document.getElementById('waifu')
+    var view = document.getElementById('live2d')
+    var tips = document.getElementById('waifu-tips')
+    var check = app.value2
+    if(check == false){
+      div.style.display = 'none'
+      view.style.display = 'none'
+      tips.style.display = 'none'
+    }else{
+      div.style.display = 'block'
+      view.style.display = 'block'
+      tips.style.display = 'block'
+    }
+  }
+</script>
+<!--  -->
+
+<script>
+  $(function(){
+    $(".up_contianer").bind('mouseover',function(){
+      $(".up_contianer").css({border:'1px dashed #409EFF',color:'#409EFF'})
+    })
+    $(".up_contianer").bind('mouseout',function(){
+      $(".up_contianer").css({border:'1px dashed #d5d5d5',color:'#d5d5d5'})
+    })
+    $(".up_contianer").bind('click',function(){
+      $(this).siblings('input[type=file]').click();
+    })
+  })
+</script>
+<script>
+  function readySubmit(){
+    var date = new Date().Format("yyyy-MM-dd");
+    var div1 = document.getElementsByName('date')[0]
+    var div2 = document.getElementsByName('passport')[0]
+    div2.value = app.passport
+    div1.value = date
+  }
+</script>
+
+<!-- 侧边分类按键 -->
+<script>
+  $(function(){
+    $('.link').bind('click',function(){
+      $('.link').css({color:'#606266'})
+      $(this).css({color:'#409EFF'})
+      app.top_bar_select = $(this).attr("name")
+      var index = $(this).attr("id")
+      console.log(index)
+      $('.top_link').css({color:"white",fontWeight:'lighter'})
+      getClassifyBlog("0",app.passport,app.top_bar_select)
+      app.index = Math.ceil(index/6)
+      app.currentPage = 1
+      $('html,body').animate({scrollTop: '0px'}, 700)
+    })
+  })
+  function getClassifyBlog(star,passport,value,str){
+    var para = 'star=' + star + "&passport=" + passport + "&value=" + value 
+    var url = './PHP/getClassifyBlog.php?' + para
+    var xhr = new XMLHttpRequest();/*调用Ajax*/
+    xhr.open('get',url,false)
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4){
+        if(xhr.status == 200){
+          var json = xhr.responseText
+          var data = eval("(" + json + ")");
+          console.log(json)
+          var strs = ''
+          for(var i=0;i<data.length;i++){
+            var id = data[i].id;
+            var title = data[i].title
+            var info = data[i].info
+            // var html = data[i].html
+            var author = data[i].author
+            var date = data[i].date
+            var classify = data[i].classify
+            var public = data[i].public
+            // strs+="<li> "+id+" / <span> "+title+" </span></li>"
+            strs+="<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i id='blog_icon' class='el-icon-date'></i><div class='date'>"+date+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>"+author+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-setting'></i><div class='classify'>"+classify+"</div><i id='blog_icon' style='margin-left: 25px;' class='el-icon-key'></i><div class='public'>"+public+"</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div class='blank'></div><div class='blog_btn_container'><button onclick='getMore("+id+")'>查看更多</button></div><div style='display: none' id="+id+">"+author+"</div></div> "
+            // strs+="<div class='blog'><div class='title'>"+title+"</div><div class='blog_info_container'><i class='el-icon-date'></i><div class='date'>"+date+"</div><i style='margin-left: 25px;' class='el-icon-user'></i><div class='author'>lasia</div></div><div class='preface_container'><h2 style='color: #525252;'>前言</h2><div class='preface'>"+info+"</div></div><div class='blank'></div><div class='blog_btn_container'><button onclick='getMore("+id+")'>查看更多</button></div></div> "
+
+          }
+          $("#blog_area").html(strs)
+        }
+      }
+    }
+    xhr.send(para)
+  }
+</script>
+
+
+<!-- 获取时间 -->
+<script>
+  //获取当前时间，并格式化输出
+  Date.prototype.Format = function (fmt) {
+      var o = {
+          "M+": this.getMonth() + 1, //月份 
+          "d+": this.getDate(), //日 
+          "H+": this.getHours(), //小时 
+          "m+": this.getMinutes(), //分 
+          "s+": this.getSeconds(), //秒 
+          "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+          "S": this.getMilliseconds() //毫秒 
+      };
+      if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+      for (var k in o)
+      if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+      return fmt;
+  }
+  </script>
+
+<!-- canvas动画效果 -->
+<script>
+
+  /* ---- particles.js config ---- */
+  
+  particlesJS("particles-js", {
+    particles: {
+      number: {
+        value: 80,
+        density: {
+          enable: true,
+          value_area: 800
+        }
+      },
+      color: {
+        value: ["#2EB67D", "#ECB22E", "#E01E5B", "#36C5F0"]
+      },
+      shape: {
+        type: ["circle"],
+        stroke: {
+          width: 0,
+          color: "#fff"
+        },
+        polygon: {
+          nb_sides: 5
+        } 
+      },
+      opacity: {
+        value: 1,
+        random: false,
+        anim: {
+          enable: false,
+          speed: 1,
+          opacity_min: 0.1,
+          sync: false
+        }
+      },
+      size: {
+        value: 8,
+        random: true,
+        anim: {
+          enable: false,
+          speed: 10,
+          size_min: 10,
+          sync: false
+        }
+      },
+      line_linked: {
+        enable: true,
+        distance: 150,
+        color: "#808080",
+        opacity: 0.4,
+        width: 1
+      },
+      move: {
+        enable: true,
+        speed: 5,
+        direction: "none",
+        random: false,
+        straight: false,
+        out_mode: "out",
+        bounce: false,
+        attract: {
+          enable: false,
+          rotateX: 600,
+          rotateY: 1200
+        }
+      }
+    },
+    interactivity: {
+      detect_on: "canvas",
+      events: {
+        onhover: {
+          enable: true,
+          mode: "grab"
+        },
+        onclick: {
+          enable: true,
+          mode: "push"
+        },
+        resize: true
+      },
+      modes: {
+        grab: {
+          distance: 140,
+          line_linked: {
+            opacity: 1
+          }
+        },
+        bubble: {
+          distance: 400,
+          size: 40,
+          duration: 2,
+          opacity: 8,
+          speed: 3
+        },
+        repulse: {
+          distance: 200,
+          duration: 0.4
+        },
+        push: {
+          particles_nb: 4
+        },
+        remove: {
+          particles_nb: 2
+        }
+      }
+    },
+    retina_detect: true
+  });
+  </script>
+
+</html>
